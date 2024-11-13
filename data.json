@@ -1,0 +1,44 @@
+[
+    {
+        "idx": 101,
+        "suhu": 36,
+        "humid": 36,
+        "kecerahan": 25,
+        "timestamp": "2010-09-18 07:23:48"
+    },
+    {
+        "idx": 226,
+        "suhu": 36,
+        "humid": 36,
+        "kecerahan": 27,
+        "timestamp": "2011-05-02 12:29:34"
+    },
+    {
+        "idx": 227,
+        "suhu": 58,
+        "humid": 52,
+        "kecerahan": 40,
+        "timestamp": "2024-11-13T19:13:35.308807"
+    },
+    {
+        "idx": 228,
+        "suhu": 58,
+        "humid": 52,
+        "kecerahan": 40,
+        "timestamp": "2024-11-13T19:13:38.683800"
+    },
+    {
+        "idx": 229,
+        "suhu": 0,
+        "humid": 0,
+        "kecerahan": 0,
+        "timestamp": "2024-11-13T19:13:40.326311"
+    },
+    {
+        "idx": 230,
+        "suhu": 58,
+        "humid": 52,
+        "kecerahan": 40,
+        "timestamp": "2024-11-13T19:13:43.701259"
+    }
+]

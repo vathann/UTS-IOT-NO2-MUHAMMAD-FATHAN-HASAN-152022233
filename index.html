@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UTS IoT</title>
+    <style>
+        /* Resetting default margin and padding */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #f4f4f9;
+            color: #333;
+            padding: 20px;
+        }
+
+        h1 {
+            font-size: 1.8em;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        form {
+            background: #ffffff;
+            padding: 20px;
+            width: 100%;
+            max-width: 500px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        label {
+            font-weight: bold;
+            display: block;
+            margin-top: 15px;
+            color: #555;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            margin: 8px 0;
+            appearance: none;
+            height: 8px;
+            background: #ddd;
+            border-radius: 5px;
+            outline: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            background-color: #007bff;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        .value-display {
+            font-size: 0.9em;
+            color: #777;
+        }
+
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 25px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 20px;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #0069d9;
+        }
+
+        table {
+            width: 100%;
+            max-width: 600px;
+            border-collapse: collapse;
+            background-color: #ffffff;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            overflow: hidden;
+            margin-top: 20px;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: center;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #007bff;
+            color: white;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        tr:hover {
+            background-color: #f1f1f1;
+        }
+
+        footer {
+            margin-top: 30px;
+            font-size: 0.85em;
+            color: #777;
+        }
+    </style>
+</head>
+<body>
+    <h1>UTS IoT - Data Monitoring</h1>
+    
+    <form id="form">
+        <label for="suhu">Suhu:</label>
+        <input id="suhu" type="range" name="suhu" min="0" max="100" value="0" />
+        <div id="suhu-value" class="value-display">0°C</div>
+        
+        <label for="kelembaban">Kelembaban:</label>
+        <input id="kelembaban" type="range" name="kelembaban" min="0" max="100" value="0" />
+        <div id="kelembaban-value" class="value-display">0%</div>
+        
+        <label for="kecerahan">Kecerahan:</label>
+        <input id="kecerahan" type="range" name="kecerahan" min="0" max="100" value="0" />
+        <div id="kecerahan-value" class="value-display">0%</div>
+    </form>
+
+    <button id="download-json">Download JSON</button>
+
+    <table>
+        <thead>
+            <tr>
+                <th>IDX</th>
+                <th>Suhu</th>
+                <th>Kelembaban</th>
+                <th>Kecerahan</th>
+                <th>Timestamp</th>
+            </tr>
+        </thead>
+        <tbody id="table-content"></tbody>
+    </table>
+
+    <footer>&copy; 2024 UTS IoT - Data Monitoring</footer>
+
+    <script>
+        document.getElementById("download-json").addEventListener("click", async () => {
+            const response = await fetch('/api/download');
+            if (response.ok) {
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = 'data.json';
+                link.click();
+            } else {
+                alert('Gagal mengunduh file JSON');
+            }
+        });
+
+        function updateSliderValue(sliderId, valueId, unit) {
+            const slider = document.getElementById(sliderId);
+            const valueDisplay = document.getElementById(valueId);
+            slider.addEventListener('input', () => {
+                valueDisplay.textContent = `${slider.value}${unit}`;
+            });
+        }
+
+        updateSliderValue('suhu', 'suhu-value', '°C');
+        updateSliderValue('kelembaban', 'kelembaban-value', '%');
+        updateSliderValue('kecerahan', 'kecerahan-value', '%');
+
+        async function sendData() {
+            const form = document.getElementById('form');
+            const data = {
+                suhu: form.suhu.value,
+                kelembaban: form.kelembaban.value,
+                kecerahan: form.kecerahan.value,
+            };
+            try {
+                const response = await fetch("/api/post", {
+                    method: "post",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(data),
+                });
+                if (response.ok) {
+                    console.log("Data berhasil dikirim!");
+                    loadData();
+                } else {
+                    throw new Error("Gagal mengirim data");
+                }
+            } catch (error) {
+                alert("Error: " + error.message);
+            }
+        }
+
+        async function loadData() {
+            const table = document.querySelector("#table-content");
+            try {
+                const response = await fetch("/api/get");
+                if (!response.ok) throw new Error("Gagal memuat data");
+
+                const json = await response.json();
+                const database = json["nilai_suhu_max_humid_max"];
+                table.innerHTML = "";
+
+                database.forEach(data => {
+                    const row = document.createElement("tr");
+                    const timestamp = new Date(data.timestamp).toLocaleString();
+                    row.innerHTML = `
+                        <td>${data.idx}</td>
+                        <td>${data.suhu}°C</td>
+                        <td>${data.humid}%</td>
+                        <td>${data.kecerahan}%</td>
+                        <td>${timestamp}</td>
+                    `;
+                    table.appendChild(row);
+                });
+            } catch (error) {
+                alert("Error: " + error.message);
+            }
+        }
+
+        setInterval(sendData, 5000);
+        loadData();
+    </script>
+</body>
+</html>
